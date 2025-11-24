@@ -1,16 +1,24 @@
-# This is a sample Python script.
+package = 'pythonProject'
+import pandas as pd
+import numpy as np
+from scipy.linalg import expm
+import matplotlib.pyplot as plt
+import Oscillator
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from matplotlib.widgets import *
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+    Oscillator
+
+    # print(matplotlib.__version__)
+    # print(matplotlib.get_backend())
+
+
+    # axes = plt.axes([0.81, 0.000001, 0.1, 0.075])
+    # button_test=Button(axes, label='test',color='yellow')
+    # button_test.on_clicked(Oscillator.oscillator_math(10,2))
+    # plt.show()
+
+
