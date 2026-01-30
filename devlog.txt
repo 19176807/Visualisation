@@ -2,9 +2,14 @@ Try to start logging the progress and plan of development.
 week 10:
 实现：
 调整框架。
+图片保存
 进行中：
-数据保存。
+特征值选取并保存。
 已知问题：
 1.textbox小数位显示仍然会出现位数过多。
 2.整体框架不明确，需要注明数据内容。
 3.项目进度需要到达数据处理和储存。（W9-W10）
+4.特征值。
+
+30/01/2026
+redo oscillator_math function with more accurate results.

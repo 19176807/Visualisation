@@ -4,9 +4,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.linalg import expm
 from matplotlib.widgets import *
+from tkinter import Tk
+from tkinter.filedialog import asksaveasfilename
 
-
-def oscillator_math(mass, stiffness, damping_coefficient=0):
+def oscillator_math_old(mass, stiffness, damping_coefficient=0):
     t = np.arange(0, 200, 1)
     b = damping_coefficient
     k = stiffness
@@ -18,6 +19,58 @@ def oscillator_math(mass, stiffness, damping_coefficient=0):
         x[i] = expm(A * ti) @ x0
     return t,x
 
+# renew math: notes for equation.
+# 阻尼、刚度和质量，
+# 有阻尼比zeta=阻尼/（2*sqrt（刚度*质量）），当阻尼比=1时无过冲，最快回到初始位置；<1时过冲，震荡；>1时无过冲但恢复慢
+# 有固有频率w_n=sqrt(k/m)
+
+# 在阻尼情况下，有阻尼频率w_d=w_n*sqrt(1-zeta**2)
+# 有积分常数A、B，用于确定初始位置和速度
+# 其中e^(-zeta*w_n*t)为衰减项（控制幅度的衰减），(A*cos(w_d*t)+B*sin(w_d*t))是由欧拉公式得出的基本往复
+# 当 欠阻尼 时A=x0初始位置，,B=(v0+zeta*w_n*x0)/w_d以消除由指数衰减产生的负速度分量
+# 位移有通解x(t)=e^(-zeta*w_n*t)*(A*cos(w_d*t)+B*sin(w_d*t))
+# 当 临界阻尼 时A=x0,B=v0+w_n*x0
+# x=(A+B*t)*e^(-w_n*t)
+# 当 过阻尼 时(两个不同实根r1r2)B=(v0-r1*x0)/(r2-r1),A=x0-B
+# x=A*e^(r1*t)+B*e^(r2*t)
+def oscillator_math(mass,stiffness,damping_coefficient=0,x0=1,v0=0,t=None):
+    if t is None:
+        t = np.linspace(0, 10, 1000)
+    c=damping_coefficient
+    m=mass
+    k=stiffness
+    zeta = c/(2*np.sqrt(k*m))
+    # damping ratio
+    w_n = np.sqrt(k / m)
+    # natural frequency
+    if zeta < 1.0:
+        # underdamped
+        w_d = w_n * np.sqrt(1 - zeta ** 2)
+        # damped natural frequency
+        A = x0
+        B = (v0+zeta*w_n*x0)/w_d
+        x = np.exp(-zeta * w_n * t) * (A * np.cos(w_d * t) + B * np.sin(w_d * t))
+    elif np.isclose(zeta, 1.0):
+        # critically damped
+        A = x0
+        B = v0 + w_n * x0
+        x = (A + B * t) * np.exp(-w_n * t)
+    elif zeta > 1.0:
+        # overdamped
+        r1 = -w_n*(zeta-np.sqrt(zeta**2-1))
+        r2 = -w_n*(zeta+np.sqrt(zeta**2-1))
+        '''
+        r=(-b+-sqrt(b^2-4ac))/2a
+         =(-c+-sqrt(c^2-4mk))/2m
+         =(-zeta*(2*sqrt(mk)) +- sqrt(zeta^2-1)*(2*sqrt(mk))) / 2m
+         =sqrt(k/m) * (-zeta+-sqrt(zeta^2-1))
+         =w_n*(-zeta+-sqrt(zeta^2-1))
+         =-w_n*(zeta-+sqrt(zeta^2-1))
+        '''
+        B = (v0-r1*x0)/(r2-r1)
+        A = x0-B
+        x = A * np.exp(r1*t)+B * np.exp(r2*t)
+    return x
 
 fig = plt.figure()
 ax = fig.subplots()
@@ -70,14 +123,31 @@ def reset(event):
     damping_coefficient_slider.reset()
 reset_button.on_clicked(reset)
 
+# TODO func sample point
+
 # TODO func input button
 # input_button.on_clicked()
 
-# TODO func save button
-# save_button.on_clicked()
+# func save button
+def save(val):
+    root = Tk()
+    root.withdraw()
+    filename = asksaveasfilename(
+        defaultextension=".png",
+        filetypes=[
+            ("PNG Image", "*.png"),
+            ("JPEG Image", "*.jpg"),
+            ("All Files", "*.*"),
+        ],
+    )
+    root.destroy()
+    plt.savefig(filename)
+save_button.on_clicked(save)
 
-# TODO func close button
-# close_button.on_clicked()
+# func close button
+def close(val):
+    plt.close()
+close_button.on_clicked(close)
 
 # func update data
 def update(val):
@@ -87,9 +157,10 @@ def update(val):
     mass_text.set_val(mass)
     stiffness_text.set_val(stiffness)
     damping_coefficient_text.set_val(damping_coefficient)
-    t,x = oscillator_math(mass,stiffness,damping_coefficient)
-    line1.set_data(t,x[:, 0])
-    line2.set_data(t,x[:, 1])
+    t = np.linspace(0, 200, 1000)
+    x = oscillator_math(mass,stiffness,damping_coefficient,1,0,t)
+    line1.set_data(t,x)
+    line2.set_data(t,x)
     fig.canvas.draw_idle()
 
 # func change text -> change slider
