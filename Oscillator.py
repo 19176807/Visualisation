@@ -6,6 +6,7 @@ from scipy.linalg import expm
 from matplotlib.widgets import *
 from tkinter import Tk
 from tkinter.filedialog import asksaveasfilename
+from oscillator_math import OscillatorMath
 
 def oscillator_math_old(mass, stiffness, damping_coefficient=0):
     t = np.arange(0, 200, 1)
@@ -72,12 +73,20 @@ def oscillator_math(mass,stiffness,damping_coefficient=0,x0=1,v0=0,t=None):
         x = A * np.exp(r1*t)+B * np.exp(r2*t)
     return x
 
+# init
+om=OscillatorMath()
+
 fig = plt.figure()
 ax = fig.subplots()
 ax.set_xlim(0, 210)
 ax.set_ylim(-1.5, 1.5)
 line1,=ax.plot(0,0, label='Displacement x(t)')
-line2,=ax.plot(0,0, label='Velocity x\'(t)', linestyle='--')
+line2,=ax.plot(0,0, label='Envelope(underdamped)', linestyle='--')
+peaks=ax.scatter([],[],color='red',marker='o',label='Peaks')
+valleys=ax.scatter([],[],color='blue',marker='o',label='Valleys')
+zeros=ax.scatter([],[],color='black',marker='o',label='Zeros')
+
+
 
 # init
 plt.get_current_fig_manager().set_window_title('Oscillator')
@@ -123,7 +132,6 @@ def reset(event):
     damping_coefficient_slider.reset()
 reset_button.on_clicked(reset)
 
-# TODO func sample point
 
 # TODO func input button
 # input_button.on_clicked()
@@ -158,9 +166,31 @@ def update(val):
     stiffness_text.set_val(stiffness)
     damping_coefficient_text.set_val(damping_coefficient)
     t = np.linspace(0, 200, 1000)
-    x = oscillator_math(mass,stiffness,damping_coefficient,1,0,t)
+
+    om.update_value('mass',mass)
+    om.update_value('stiffness',stiffness)
+    om.update_value('damping_coefficient',damping_coefficient)
+    om.update_value('t',t)
+
+
+    results = om.calculate()
+    x=results['x']
+    if results['envelope'] is not None and results['crit_points'] is not None:
+        envelope = results['envelope']
+        crit_points = results['crit_points']
+        line2.set_data(t,envelope)
+        p_t,p_x = zip(*crit_points['peaks'])
+        v_t,v_x = zip(*crit_points['valleys'])
+        z_t,z_x = zip(*crit_points['zeros'])
+        ps = np.column_stack((p_t, p_x))
+        vs = np.column_stack((v_t, v_x))
+        zs = np.column_stack((z_t, z_x))
+        peaks.set_offsets(ps)
+        valleys.set_offsets(vs)
+        zeros.set_offsets(zs)
+
+
     line1.set_data(t,x)
-    line2.set_data(t,x)
     fig.canvas.draw_idle()
 
 # func change text -> change slider
