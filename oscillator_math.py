@@ -24,6 +24,12 @@ class OscillatorMath:
         else:
             return -1
 
+    def update_params(self, params):
+        param_list = ['mass', 'stiffness', 'damping_coefficient', 'x0', 'v0']
+        for i in range(len(params)):
+            setattr(self, param_list[i], params[i])
+
+
     def calculate(self):
         def cal_underdamped():
             w_d = w_n * np.sqrt(1 - zeta ** 2)
@@ -121,7 +127,7 @@ class OscillatorMath:
             return results
 
         if self.t is None:
-            t = np.linspace(0, 10, 1000)
+            t = np.linspace(0, 10, 500)
         else:
             t = self.t
         if self.x0 == 0.0 and self.v0 == 0.0:

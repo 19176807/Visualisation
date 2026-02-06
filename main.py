@@ -4,13 +4,15 @@ import numpy as np
 from scipy.linalg import expm
 import matplotlib.pyplot as plt
 import Oscillator
+from main_window import DashboardApp
+import tkinter as tk
 
 from matplotlib.widgets import *
 
 if __name__ == '__main__':
-
-
-    Oscillator
+    app = DashboardApp()
+    app.mainloop()
+    # Oscillator
 
     # print(matplotlib.__version__)
     # print(matplotlib.get_backend())
