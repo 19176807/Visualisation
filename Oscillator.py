@@ -82,9 +82,9 @@ ax.set_xlim(0, 210)
 ax.set_ylim(-1.5, 1.5)
 line1,=ax.plot(0,0, label='Displacement x(t)')
 line2,=ax.plot(0,0, label='Envelope(underdamped)', linestyle='--')
-peaks=ax.scatter([],[],color='red',marker='o',label='Peaks')
-valleys=ax.scatter([],[],color='blue',marker='o',label='Valleys')
-zeros=ax.scatter([],[],color='black',marker='o',label='Zeros')
+peaks=ax.scatter([],[],color='red',marker='o',label='Peaks(underdamped)')
+valleys=ax.scatter([],[],color='blue',marker='o',label='Valleys(underdamped)')
+zeros=ax.scatter([],[],color='black',marker='o',label='Zeros(underdamped)')
 
 
 
@@ -101,7 +101,7 @@ axe_mass = plt.axes([x_init, y_init-1*y_space, slider_length, comp_width])
 axe_stiffness = plt.axes([x_init, y_init-4*y_space, slider_length, comp_width])
 axe_damping_coefficient = plt.axes([x_init, y_init-7*y_space, slider_length, comp_width])
 
-mass_slider = Slider(axe_mass,'',valmin=0,valmax=100,valinit=10,valstep=0.01,valfmt='%.2f')
+mass_slider = Slider(axe_mass,'',valmin=0,valmax=10,valinit=1,valstep=0.01,valfmt='%.2f')
 stiffness_slider = Slider(axe_stiffness,'',valmin=0.0,valmax=2.0,valinit=0.5,valstep=0.01,valfmt='%.2f')
 damping_coefficient_slider = Slider(axe_damping_coefficient,'',valmin=0,valmax=2,valinit=0,valstep=0.01,valfmt='%.2f')
 

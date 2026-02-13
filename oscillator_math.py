@@ -2,12 +2,22 @@ import numpy as np
 
 
 class OscillatorMath:
-    mass:float=0.0
-    stiffness:float=0.0
+    mass:float=1.0
+    stiffness:float=1.0
     damping_coefficient:float=0.0
-    x0:float=0.0
-    v0:float=0.0
+    initial_displacement:float=0.0
+    initial_velocity:float=0.0
     t :np.ndarray | None = None
+
+    def __init__(self):
+        self.mass = 1.0
+        self.stiffness = 1.0
+        self.damping_coefficient = 0.0
+        self.initial_displacement = 0.0
+        self.initial_velocity = 0.0
+
+    def element_names(self):
+        return tuple(self.__dict__.keys())
 
     def update_value(self, key:str, value):
         if hasattr(self, key):
@@ -25,7 +35,7 @@ class OscillatorMath:
             return -1
 
     def update_params(self, params):
-        param_list = ['mass', 'stiffness', 'damping_coefficient', 'x0', 'v0']
+        param_list = ['mass', 'stiffness', 'damping_coefficient', 'initial_displacement', 'initial_velocity']
         for i in range(len(params)):
             setattr(self, param_list[i], params[i])
 
@@ -127,14 +137,14 @@ class OscillatorMath:
             return results
 
         if self.t is None:
-            t = np.linspace(0, 10, 500)
+            t = np.linspace(0, 50, 1000)
         else:
             t = self.t
-        if self.x0 == 0.0 and self.v0 == 0.0:
+        if self.initial_displacement == 0.0 and self.initial_velocity == 0.0:
             x0 = 1.0
         else:
-            x0 = self.x0
-        c, m, k, v0 = self.damping_coefficient, self.mass, self.stiffness, self.v0
+            x0 = self.initial_displacement
+        c, m, k, v0 = self.damping_coefficient, self.mass, self.stiffness, self.initial_velocity
         zeta = c/(2*np.sqrt(k*m))
         # damping ratio
         w_n = np.sqrt(k / m)

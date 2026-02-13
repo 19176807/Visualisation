@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 
 class InputGroup(tk.Frame):
     # input group (Entry & Scale)
-    def __init__(self, parent, label_text, index, callback, *args, **kwargs):
+    def __init__(self, parent, label_text, index, callback,init_value,min_value,max_value,step_value, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.callback = callback  # 数据变化时触发的回调函数（用于更新图表）
         self.index = index
@@ -18,7 +18,7 @@ class InputGroup(tk.Frame):
         tk.Label(self, text=label_text, font=("Arial", 10, "bold")).pack(anchor="w")
 
         # 变量绑定
-        self.var = tk.DoubleVar(value=1.0)
+        self.var = tk.DoubleVar(value=init_value)
 
         # 2. Entry
         self.entry = tk.Entry(self, textvariable=self.var, width=10)
@@ -26,8 +26,8 @@ class InputGroup(tk.Frame):
         self.entry.bind('<Return>', self.on_entry_change)  # 回车确认
 
         # 3. Scale
-        self.scale = tk.Scale(self, variable=self.var, from_=0.1, to=10.0,
-                              orient="horizontal", resolution=0.1, command=self.on_scale_change)
+        self.scale = tk.Scale(self, variable=self.var, from_=min_value, to=max_value,
+                              orient="horizontal", resolution=step_value, command=self.on_scale_change)
         self.scale.pack(side="left", fill="x", expand=True, padx=5)
 
     def on_scale_change(self, event=None):
@@ -76,12 +76,7 @@ class ChartWindow(tk.Toplevel):
         self.right_panel.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
         # TODO five input groups for mass, stiffness, co, initial x and initial v
-        self.inputs = []
-        for i in range(5):
-            group = InputGroup(self.left_panel, f"Parameter {i + 1}", i, self.update_plot)
-            group.pack(fill="x", pady=10)
-            self.inputs.append(group)
-
+        self.init_accesses()
         # TODO one input text fot time.
 
         # graph
@@ -102,20 +97,40 @@ class ChartWindow(tk.Toplevel):
         # right (Close)
         tk.Button(self.bottom_panel, text="Close", command=self.close_window, bg="#ffcccc", **btn_style).pack(
             side="right", padx=20, pady=10)
+    def init_accesses(self):
+        """
+        for every element sent from om, generate an access group and name it with the element name.
+        """
+        self.inputs = []
+        for index, element in enumerate(self.om.element_names()):
+            if element=="mass":
+                init_value, min_value, max_value,step_value = 1.0,0.1,5.0,0.1
+            elif element=="damping_coefficient":
+                init_value, min_value, max_value,step_value = 0.0,0.0,4.0,0.01
+            elif element=="initial_displacement":
+                init_value, min_value, max_value,step_value = 0.0,-1.0,1.0,0.1
+            elif element=="initial_velocity":
+                init_value, min_value, max_value,step_value = 1.0,-5.0,5.0,0.1
+            elif element=="stiffness":
+                init_value, min_value, max_value,step_value = 1.0,0.0,4.0,0.1
+
+            group = InputGroup(self.left_panel, element, index, self.update_plot,init_value,min_value,max_value,step_value)
+            group.pack(fill="x", pady=10)
+            self.inputs.append(group)
+        return -1
 
     def init_plot(self):
         """初始化 Matplotlib 图表"""
         # 1. 创建 Figure
         self.fig = Figure(figsize=(5, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-        self.ax.set_title("Real-time Data Plot")
-        self.ax.set_xlabel("X Axis")
-        self.ax.set_ylabel("Amplitude")
+        self.ax.set_title("Oscillator")
+        self.ax.set_xlabel("Time")
+        self.ax.set_ylabel("")
         self.line, = self.ax.plot([], [], 'r-')  # 初始化空线条
 
         # 2. 嵌入到 Tkinter
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_panel)
-        self.canvas.draw()
         self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
 
         # 第一次绘制
@@ -126,15 +141,17 @@ class ChartWindow(tk.Toplevel):
         params = [inp.get_value() for inp in self.inputs]
 
         # 生成演示数据 (例如：合成正弦波)
-        x = np.linspace(0, 10, 500)
+        x = np.linspace(0, 50, 1000)
         # 使用 params[0] 控制幅度, params[1] 控制频率, 这里的逻辑可以自定义
         self.om.update_params(params)
         results = self.om.calculate()
         y = results['x']
         # 更新线条数据
         self.line.set_data(x, y)
+        # self.ax.set_ylim(-2, 2)
         self.ax.relim()  # 重新计算坐标轴限制
         self.ax.autoscale_view()  # 自动缩放
+        self.update_idletasks()
         self.canvas.draw()  # 重绘
 
     def reset_values(self):
@@ -172,7 +189,7 @@ class DashboardApp(tk.Tk):
 
     def __init__(self):
         super().__init__()
-        self.title("Main Control Panel")
+        self.title("Dynamic System displayer")
         self.geometry("600x400")
 
         # 主布局：左右两列
