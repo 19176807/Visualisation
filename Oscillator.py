@@ -9,7 +9,7 @@ from tkinter.filedialog import asksaveasfilename
 from oscillator_math import OscillatorMath
 
 def oscillator_math_old(mass, stiffness, damping_coefficient=0):
-    t = np.arange(0, 200, 1)
+    t = np.arange(0, 50, 1)
     b = damping_coefficient
     k = stiffness
     m = mass
@@ -78,7 +78,7 @@ om=OscillatorMath()
 
 fig = plt.figure()
 ax = fig.subplots()
-ax.set_xlim(0, 210)
+ax.set_xlim(0, 50)
 ax.set_ylim(-1.5, 1.5)
 line1,=ax.plot(0,0, label='Displacement x(t)')
 line2,=ax.plot(0,0, label='Envelope(underdamped)', linestyle='--')
@@ -165,7 +165,7 @@ def update(val):
     mass_text.set_val(mass)
     stiffness_text.set_val(stiffness)
     damping_coefficient_text.set_val(damping_coefficient)
-    t = np.linspace(0, 200, 1000)
+    t = np.linspace(0, 50, 1000)
 
     om.update_value('mass',mass)
     om.update_value('stiffness',stiffness)

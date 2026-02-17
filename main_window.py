@@ -105,14 +105,14 @@ class ChartWindow(tk.Toplevel):
         for index, element in enumerate(self.om.element_names()):
             if element=="mass":
                 init_value, min_value, max_value,step_value = 1.0,0.1,5.0,0.1
+            elif element == "stiffness":
+                init_value, min_value, max_value, step_value = 1.0, 0.0, 4.0, 0.1
             elif element=="damping_coefficient":
                 init_value, min_value, max_value,step_value = 0.0,0.0,4.0,0.01
             elif element=="initial_displacement":
-                init_value, min_value, max_value,step_value = 0.0,-1.0,1.0,0.1
+                init_value, min_value, max_value,step_value = 1.0,-1.0,1.0,0.1
             elif element=="initial_velocity":
-                init_value, min_value, max_value,step_value = 1.0,-5.0,5.0,0.1
-            elif element=="stiffness":
-                init_value, min_value, max_value,step_value = 1.0,0.0,4.0,0.1
+                init_value, min_value, max_value,step_value = 0.0,-5.0,5.0,0.1
 
             group = InputGroup(self.left_panel, element, index, self.update_plot,init_value,min_value,max_value,step_value)
             group.pack(fill="x", pady=10)
@@ -126,9 +126,12 @@ class ChartWindow(tk.Toplevel):
         self.ax = self.fig.add_subplot(111)
         self.ax.set_title("Oscillator")
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("")
+        self.ax.set_ylabel("Distance")
         self.line, = self.ax.plot([], [], 'r-')  # 初始化空线条
-
+        self.env_line, = self.ax.plot([], [], 'k--', alpha=0.5, label='Envelope')
+        self.peaks = self.ax.scatter([], [], c='blue', marker='^')
+        self.zeros = self.ax.scatter([], [], c='black', marker='o')
+        self.valleys = self.ax.scatter([], [], c='green', marker='v')
         # 2. 嵌入到 Tkinter
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_panel)
         self.canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
@@ -148,7 +151,33 @@ class ChartWindow(tk.Toplevel):
         y = results['x']
         # 更新线条数据
         self.line.set_data(x, y)
-        # self.ax.set_ylim(-2, 2)
+        self.ax.set_ylim(-2, 2)
+        if results['envelope'] is not None and results['crit_points'] is not None:
+            envelope = results['envelope']
+            crit_points = results['crit_points']
+            y_env = results['envelope']
+            peaks = results['crit_points'].get('peaks', [])
+            zeros = results['crit_points'].get('zeros', [])
+            valleys = results['crit_points'].get('valleys', [])
+            t_p, x_p = zip(*peaks)
+            self.peaks.set_offsets(np.c_[t_p, x_p])
+            t_p, x_p = zip(*zeros)
+            self.zeros.set_offsets(np.c_[t_p, x_p])
+            t_p, x_p = zip(*valleys)
+            self.valleys.set_offsets(np.c_[t_p, x_p])
+            self.env_line.set_data(x, y_env)
+            self.env_line.set_visible(True)
+            self.peaks.set_visible(True)
+            self.zeros.set_visible(True)
+            self.valleys.set_visible(True)
+        else:
+            envelope = None
+            crit_points = None
+            self.env_line.set_visible(False)
+            self.peaks.set_visible(False)
+            self.zeros.set_visible(False)
+            self.valleys.set_visible(False)
+
         self.ax.relim()  # 重新计算坐标轴限制
         self.ax.autoscale_view()  # 自动缩放
         self.update_idletasks()
@@ -156,8 +185,11 @@ class ChartWindow(tk.Toplevel):
 
     def reset_values(self):
         """重置所有参数"""
-        for inp in self.inputs:
-            inp.set_value(1.0)
+        for index, inp in enumerate(self.inputs):
+            if index == 2 or index == 4:
+                inp.set_value(0.0)
+            else:
+                inp.set_value(1.0)
         self.update_plot()
 
     def save_data(self):
